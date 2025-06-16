@@ -30,8 +30,8 @@ class Retriever:
                 hits.append({
                     "code": doc,
                     "file_path": meta['file_path'],
-                    "start_line": meta['start_line'],
-                    "end_line": meta['end_line'],
+                    "start_line": meta.get('start_line', -1),
+                    "end_line": meta.get('end_line', -1),
                     "language": meta['language'],
                     "project": meta.get('project', proj)
                 })

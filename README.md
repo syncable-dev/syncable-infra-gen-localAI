@@ -155,6 +155,12 @@ _TODO: Add unit tests and instructions for running them._
 
 ---
 
+check db from chromadb: 
+
+uv run python -m src.chroma_manager --db_dir data/chroma_index --list
+
+uv run python -m src.chroma_manager --db_dir data/chroma_index --preview PlotTwister
+
 ## Troubleshooting
 
 - **Ollama not found:**  

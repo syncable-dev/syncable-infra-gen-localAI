@@ -47,8 +47,33 @@ def main():
     if args.command == "embed":
         embedder.embed_project(args.project_dir, args.name)
     elif args.command == "ask":
+        # Guide user to select a valid project if specified or if multiple exist
+        projects = chroma_manager.get_all_projects()
+        if args.project:
+            if args.project not in projects:
+                print(f"Project '{args.project}' not found. Available projects:")
+                for proj in projects:
+                    print(f" - {proj}")
+                print("Please use --project with one of the above.")
+                return
+        else:
+            if len(projects) == 0:
+                print("No projects embedded yet. Please embed a project first.")
+                return
+            elif len(projects) == 1:
+                # Only one project, use it and inform the user
+                args.project = projects[0]
+                print(f"No --project specified. Using the only embedded project: {args.project}")
+            else:
+                print("Multiple projects are embedded. Please specify one with --project. Available projects:")
+                for proj in projects:
+                    print(f" - {proj}")
+                return
         answer = query_handler.ask(' '.join(args.question), project=args.project)
-        print(answer)
+        if not answer.strip():
+            print(f"No relevant code found for your query in project '{args.project}'.")
+        else:
+            print(answer)
     elif args.command == "list":
         projects = chroma_manager.get_all_projects()
         if not projects:
@@ -58,12 +83,26 @@ def main():
             for proj in projects:
                 print(f" - {proj}")
     elif args.command == "generate-docker":
+        projects = chroma_manager.get_all_projects()
+        if args.project not in projects:
+            print(f"Project '{args.project}' not found. Available projects:")
+            for proj in projects:
+                print(f" - {proj}")
+            print("Please use --project with one of the above.")
+            return
         try:
             infra = InfraGenerator(args.project, config, chroma_manager)
             infra.generate_dockerfile()
         except ProjectNotEmbedded as e:
             print(str(e))
     elif args.command == "generate-compose":
+        projects = chroma_manager.get_all_projects()
+        if args.project not in projects:
+            print(f"Project '{args.project}' not found. Available projects:")
+            for proj in projects:
+                print(f" - {proj}")
+            print("Please use --project with one of the above.")
+            return
         try:
             infra = InfraGenerator(args.project, config, chroma_manager)
             infra.generate_docker_compose()

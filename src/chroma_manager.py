@@ -8,10 +8,8 @@ class ChromaManager:
         self.client = chromadb.PersistentClient(path=self.chroma_db_dir)
 
     def get_all_projects(self):
-        if not os.path.exists(self.chroma_db_dir):
-            return []
-        return [d for d in os.listdir(self.chroma_db_dir)
-                if os.path.isdir(os.path.join(self.chroma_db_dir, d))]
+        # Return all ChromaDB collection names (not directory names)
+        return [col.name for col in self.client.list_collections()]
 
     def get_collection(self, project_name: str):
         return self.client.get_or_create_collection(name=project_name)

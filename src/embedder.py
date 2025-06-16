@@ -41,6 +41,42 @@ def should_exclude(path, exclude_patterns):
     return False
 
 
+def get_line_offsets(text):
+    """Return a list of character offsets for the start of each line in text."""
+    offsets = [0]
+    for idx, char in enumerate(text):
+        if char == '\n':
+            offsets.append(idx + 1)
+    return offsets
+
+
+def get_chunk_line_numbers(chunk_text, file_text, start_search=0):
+    """Return (start_line, end_line) for chunk_text within file_text."""
+    # Find the chunk in the file
+    idx = file_text.find(chunk_text, start_search)
+    if idx == -1:
+        return -1, -1
+    line_offsets = get_line_offsets(file_text)
+    # Find start line
+    start_line = 0
+    for i, offset in enumerate(line_offsets):
+        if offset > idx:
+            start_line = i
+            break
+    else:
+        start_line = len(line_offsets)
+    # Find end line
+    end_idx = idx + len(chunk_text)
+    end_line = 0
+    for i, offset in enumerate(line_offsets):
+        if offset > end_idx:
+            end_line = i
+            break
+    else:
+        end_line = len(line_offsets)
+    return start_line, end_line
+
+
 class Embedder:
     def __init__(self, config: dict, chroma_manager: ChromaManager):
         self.config = config
@@ -61,7 +97,13 @@ class Embedder:
             )
 
         docs = [Document(page_content=source_code, metadata={"file_path": file_path})]
-        return splitter.split_documents(docs)
+        split_docs = splitter.split_documents(docs)
+        # Add start_line and end_line to each chunk's metadata using helper
+        for doc in split_docs:
+            start_line, end_line = get_chunk_line_numbers(doc.page_content, source_code)
+            doc.metadata['start_line'] = start_line
+            doc.metadata['end_line'] = end_line
+        return split_docs
 
     def embed_code(self, text):
         url = f"{self.config['ollama_base_url']}/api/embeddings"
@@ -106,6 +148,7 @@ class Embedder:
                     "language": get_language_from_extension(file_path, self.config),
                     "project": project_name,
                     "chunk_id": f"chunk_{i}",
+                    # start_line and end_line are already set by chunk_code
                 })
 
                 doc_id = f"{project_name}:{rel_path}:{i}"
