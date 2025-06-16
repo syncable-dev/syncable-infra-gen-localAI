@@ -1,0 +1,16 @@
+models:
+  embed_model: manutic/nomic-embed-code:7b-Q4_K_M
+  qna_model: codestral:22b-v0.1-q2_K
+ollama_base_url: "http://localhost:11434"
+embedding_chunk_size: 1000  # characters
+supported_languages:
+  - python
+  - javascript
+  - go
+  - typescript
+extensions:
+  python: .py
+  javascript: .js
+  typescript: .ts
+  go: .go
+chroma_db_dir: "./data/chroma_index"
