@@ -116,7 +116,19 @@ class Embedder:
         return resp.json()['embedding']
 
     def embed_project(self, project_dir, project_name=None, exclude=None):
-        exclude = exclude or ['.git', '__pycache__', '*.pyc', '*.log', 'node_modules', 'venv', '.env']
+        exclude = exclude or  [
+        "__pycache__/", "*.egg-info/", "test/", "prompt/", "data/", ".git/", ".venv/", "env/", "build/", "dist/","*.lock",
+        # JS/TS/Node build artifacts and dependencies only
+        "node_modules/", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "vite.config.*", "next.config.*", "webpack.config.*", "babel.config.*",
+        # Go build artifacts only
+        "vendor/",
+        # Rust build artifacts only
+        "target/",
+        # License and prompts
+        "LICENSE", "license*", 
+        # Python/Ruby/other language init/meta files
+        "__init__.py", "__init__.pyc", "__init__.pyo", "__init__.pyw", "__init__.cpython-*", "__main__.py", "__main__.pyc", "__main__.pyo", "__main__.pyw", "__main__.cpython-*", "__about__.py", "__version__.py", "__meta__.py", "__init__.rb", "__init__.js", "__init__.ts"
+        ]
         project_name = project_name or get_project_name(project_dir)
         source_files = [
             f for f in list_source_files(project_dir, self.config['extensions'].values())
@@ -126,7 +138,7 @@ class Embedder:
         print(f"Source files: {source_files}")
         print(f"Embedding {len(source_files)} files in project '{project_name}'")
 
-        collection = self.chroma_manager.get_collection(project_name)
+        collection = self.chroma_manager.get_collection(project_name, project_dir=project_dir)
 
         for file_path in tqdm(source_files, desc=f"Embedding code for {project_name}"):
             rel_path = os.path.relpath(file_path, project_dir)

@@ -11,8 +11,12 @@ class ChromaManager:
         # Return all ChromaDB collection names (not directory names)
         return [col.name for col in self.client.list_collections()]
 
-    def get_collection(self, project_name: str):
-        return self.client.get_or_create_collection(name=project_name)
+    def get_collection(self, project_name: str, project_dir: str = None):
+        """Get or create a collection. If creating, set project_dir as metadata."""
+        if project_dir is not None:
+            return self.client.get_or_create_collection(name=project_name, metadata={"project_dir": os.path.abspath(project_dir)})
+        else:
+            return self.client.get_or_create_collection(name=project_name)
 
     def get_project_metadata(self, project_name: str):
         collection = self.get_collection(project_name)

@@ -1,6 +1,10 @@
+# utils.py
 import os
 import yaml
 import shutil
+
+import os
+from typing import Optional
 
 def load_config(config_path: str = None) -> dict:
     config_path = config_path or os.path.join(os.path.dirname(__file__), "config.yaml")
@@ -30,12 +34,17 @@ def ensure_dir_exists(path: str):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def get_all_project_collections(chroma_db_dir: str):
-    # Returns a list of all chroma collections (project names)
-    collections = []
-    if os.path.exists(chroma_db_dir):
-        for entry in os.listdir(chroma_db_dir):
-            # Each project will have a corresponding directory inside chroma_index
-            if os.path.isdir(os.path.join(chroma_db_dir, entry)):
-                collections.append(entry)
-    return collections
+
+
+
+def read_manifest_file(project_path: str, manifest: Optional[str]) -> str:
+    """
+    Read and return the contents of `manifest` under `project_path`, if it exists.
+    """
+    if not manifest:
+        return ""
+    path = os.path.join(project_path, manifest)
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    return ""

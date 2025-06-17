@@ -97,7 +97,8 @@ python src/main.py --help
 
 - **Ask a Question:**
   ```sh
-  python src/main.py ask "How does authentication work?" --project your_project_name
+  uv run python src/main.py ask "How does authentication work?" --project your_project_name
+  uv run python -m src.main ask "what does the main.py do" --project "PlotTwister"
   ```
 
 - **List Embedded Projects:**
@@ -109,6 +110,11 @@ python src/main.py --help
   ```sh
   python src/main.py generate-docker --project your_project_name
   ```
+# generate full infra for a multi-service repo
+uv run python -m src.main generate-infra /path/to/repo --output infra
+
+# generate just the Dockerfile for a single service folder
+python -m yourpackage.main generate-service-docker /path/to/repo/services/users
 
 - **Generate docker-compose.yml:**
   ```sh
