@@ -9,6 +9,7 @@ dependencies = [
     "gitingest>=0.1.4",
     "langchain>=0.3.25",
     "langchain-community>=0.3.25",
+    "langchain-ollama>=0.3.3",
     "pyyaml>=6.0.2",
     "requests>=2.32.4",
     "tqdm>=4.67.1",

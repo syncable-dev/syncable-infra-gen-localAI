@@ -139,7 +139,7 @@ class Embedder:
         print(f"Embedding {len(source_files)} files in project '{project_name}'")
 
         collection = self.chroma_manager.get_collection(project_name, project_dir=project_dir)
-
+        collection.modify(metadata={"project_dir": os.path.abspath(project_dir)})
         for file_path in tqdm(source_files, desc=f"Embedding code for {project_name}"):
             rel_path = os.path.relpath(file_path, project_dir)
             with open(file_path, "r", encoding="utf-8") as f:
