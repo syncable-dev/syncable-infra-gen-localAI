@@ -1,5 +1,7 @@
 import argparse
 import sys
+import time
+import logging
 
 from .setup_ollama import OllamaSetup
 from .utils import load_config
@@ -11,16 +13,20 @@ from .infra_generator import InfraGenerator, ProjectNotEmbedded
 from .infra_agent import run_infra_pipeline
 
 def main():
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
+    logger = logging.getLogger("infra-main")
     # 1) Ensure Ollama is running
+    logger.info("Checking Ollama setup...")
     OllamaSetup().setup()
-
+    logger.info("Ollama is ready.")
     # 2) Core components
+    logger.info("Loading config and initializing core components...")
     config = load_config()
     chroma_manager = ChromaManager(config['chroma_db_dir'])
     embedder = Embedder(config, chroma_manager)
     retriever = Retriever(config, chroma_manager)
     query_handler = QueryHandler(config, retriever)
-
+    logger.info("Core components initialized.")
     # 3) CLI
     parser = argparse.ArgumentParser(description="Local Codebase Assistant CLI")
     subparsers = parser.add_subparsers(dest="command")
@@ -52,7 +58,10 @@ def main():
     args = parser.parse_args()
 
     if args.command == "embed":
+        logger.info(f"Embedding project: {args.project_dir} (name={args.name})")
+        t0 = time.time()
         embedder.embed_project(args.project_dir, args.name)
+        logger.info(f"Embedding complete. Time taken: {time.time()-t0:.1f}s")
 
     elif args.command == "ask":
         projects = chroma_manager.get_all_projects()
@@ -60,10 +69,14 @@ def main():
         if not proj or proj not in projects:
             print("Specify --project from:", projects)
             sys.exit(1)
+        logger.info(f"Answering question for project: {proj}")
+        t0 = time.time()
         answer = query_handler.ask(" ".join(args.question), project=proj)
+        logger.info(f"Answer generated in {time.time()-t0:.1f}s")
         print(answer)
 
     elif args.command == "list":
+        logger.info("Listing all embedded projects...")
         for p in chroma_manager.get_all_projects():
             print(p)
 
@@ -72,8 +85,11 @@ def main():
         if args.project not in projects:
             print("Available:", projects); sys.exit(1)
         try:
+            logger.info(f"Generating Dockerfile for project: {args.project}")
+            t0 = time.time()
             infra = InfraGenerator(args.project, config, chroma_manager)
             infra.generate_dockerfile(retriever)
+            logger.info(f"Dockerfile generated in {time.time()-t0:.1f}s")
         except ProjectNotEmbedded as e:
             print(e)
 
@@ -82,16 +98,23 @@ def main():
         if args.project not in projects:
             print("Available:", projects); sys.exit(1)
         try:
+            logger.info(f"Generating docker-compose.yml for project: {args.project}")
+            t0 = time.time()
             infra = InfraGenerator(args.project, config, chroma_manager)
             infra.generate_docker_compose(retriever)
+            logger.info(f"docker-compose.yml generated in {time.time()-t0:.1f}s")
         except ProjectNotEmbedded as e:
             print(e)
 
     elif args.command == "generate-infra":
+        logger.info(f"Starting full infra generation for source: {args.source} (output={args.output})")
+        t0 = time.time()
         try:
             run_infra_pipeline(args.source, args.output)
+            logger.info(f"Full infra generation completed in {time.time()-t0:.1f}s")
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
+            logger.error(f"Infra generation failed: {e}")
             sys.exit(2)
 
     else:

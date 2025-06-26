@@ -34,9 +34,6 @@ def ensure_dir_exists(path: str):
     if not os.path.exists(path):
         os.makedirs(path)
 
-
-
-
 def read_manifest_file(project_path: str, manifest: Optional[str]) -> str:
     """
     Read and return the contents of `manifest` under `project_path`, if it exists.

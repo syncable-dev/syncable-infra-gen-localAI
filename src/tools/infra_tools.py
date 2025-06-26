@@ -1,80 +1,102 @@
-# file: tools/infra_tools.py
-
 import json
 import logging
+import os
 from typing import Any, Dict, List
 
+# Langchain and LLM components
 from langchain.tools import BaseTool
-from ..llm_utils import call_llm
-from ..utils import read_manifest_file
+from langchain_ollama import ChatOllama
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+
+# Import the structured prompt templates we created
+from ..prompt_templates import DOCKERFILE_SYSTEM_PROMPT, DOCKERFILE_USER_PROMPT, DOCKER_COMPOSE_SYSTEM_PROMPT, DOCKER_COMPOSE_USER_PROMPT
 
 logger = logging.getLogger(__name__)
 
+# --- Helper Functions ---
+
+def _get_latest_docker_image_tag(image_name: str) -> str:
+    """
+    Helper to get a default stable tag for common service images.
+    In a real system, this could be expanded to parse versions from service context.
+    """
+    latest_tags = {
+        "postgres": "16-alpine",
+        "redis": "7-alpine",
+        "mysql": "8.0",
+        "mongo": "7.0",
+    }
+    return latest_tags.get(image_name, "latest")
+
+def _invoke_llm(system_prompt: str, user_prompt: str, context: dict, config: dict) -> str:
+    """
+    A standardized function to invoke the language model, passing templates
+    and context separately to avoid formatting errors.
+    """
+    logger.info("Invoking LLM for infrastructure generation...")
+    llm = ChatOllama(
+        base_url=config['ollama_base_url'],
+        model=config['models']['qna_model'], 
+        temperature=config.get("temperature", 0.05)
+    )
+    
+    chat_prompt = ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(system_prompt),
+        HumanMessagePromptTemplate.from_template(user_prompt)
+    ])
+    
+    chain = chat_prompt | llm
+    
+    # Safely invoke the chain with the context dictionary
+    response = chain.invoke(context)
+    
+    logger.info("LLM invocation complete.")
+    return response.content.strip()
+
+# --- Refactored Tools ---
 
 class DockerfileServiceTool(BaseTool):
     name: str = "generate_service_dockerfile"
     description: str = (
-        "Generate a production-ready Dockerfile for one service. "
-        "Input JSON must include keys: project_path, service, summary, tree, "
-        "code_context, dockerignore, env_file, config."
+        "Generate a production-ready Dockerfile for one service using RAG context and best-practice templates. "
+        "Input JSON must include keys: service, summary, tree, code_context, config."
     )
 
     def _run(self, input_json: str) -> str:
+        """
+        This method now acts as an orchestrator. It prepares the context
+        and calls the LLM with our high-quality, structured prompt templates.
+        """
         data: Dict[str, Any] = json.loads(input_json)
-        project = data["project_path"]
+        
+        # 1. Prepare the context dictionary required by the prompt template
         svc = data["service"]
-        summary = data["summary"]
-        tree: List[str] = data["tree"]
-        code_ctx = data.get("code_context", "")
-        dockerignore = data.get("dockerignore", "")
-        env_file = data.get("env_file", "")
-        config = data["config"]
+        context = {
+            "project_name": svc.get("name", "unknown-service"),
+            "summary": data.get("summary", "No summary provided."),
+            "tree": "\n".join(data.get("tree", [])),
+            "tree_list": data.get("tree_list", "[]"),
+            "manifest_content": svc.get("manifest_content", "Manifest not found."),
+            # Assuming the agent provides these context keys
+            "entrypoint_content": data.get("code_context", ""),
+            "other_relevant_snippets": "", # Can be enriched by the agent if needed
+            # Use a default tag, as service-specific version detection is complex
+            "latest_base_image_tag": f"{svc.get('language', 'generic')}:latest" 
+        }
 
-        svc_path = svc["path"]
-        manifest_content = read_manifest_file(project, svc.get("manifest"))
-
-        # build the file list under this service
-        if svc_path:
-            file_list = [p for p in tree if p.startswith(f"{svc_path}/")]
-        else:
-            file_list = [p for p in tree if "/" not in p]
-
-        prompt = f"""
-            Generate a production-ready Dockerfile for service `{svc['name']}`:
-            - Path: `{svc_path or '.'}`
-            - Language: {svc.get('language')}
-            - Dependency manifest ({svc.get('manifest')}):
-            {manifest_content}
-
-            - .dockerignore patterns:
-            {dockerignore}
-
-            - Example env file:
-            {env_file}
-
-            - Project summary:
-            {summary}
-
-            - Relevant code snippets:
-            {code_ctx}
-            - Files under this service:
-            {chr(10).join(f"- {p}" for p in file_list)}
-
-            Include any detected entrypoint ({svc.get('entrypoint')}), port ({svc.get('port')}), 
-            environment ({svc.get('env')}), and dependencies ({svc.get('depends_on')}). 
-            Output only the Dockerfile content.
-            """.strip()
-
-        dockerfile = call_llm(
-            prompt,
-            base_url=config["ollama_base_url"],
-            model=config["models"]["infra_model"],
-            temperature=config.get("temperature", 0.0),
+        # 2. Invoke the LLM using the helper and our templates
+        dockerfile = _invoke_llm(
+            DOCKERFILE_SYSTEM_PROMPT,
+            DOCKERFILE_USER_PROMPT,
+            context,
+            data["config"]
         )
 
+        # 3. Format the output artifact
+        service_path = svc.get("path", "")
         artifact = {
-            "path": f"{svc_path}/Dockerfile" if svc_path else "Dockerfile",
-            "content": dockerfile.strip()
+            "path": os.path.join(service_path, "Dockerfile"),
+            "content": dockerfile
         }
         return json.dumps(artifact)
 
@@ -85,56 +107,43 @@ class DockerfileServiceTool(BaseTool):
 class ComposeTool(BaseTool):
     name: str = "generate_compose"
     description: str = (
-        "Generate a docker-compose.yml for multiple services. "
+        "Generate a docker-compose.yml for multiple services using RAG context and best-practice templates."
         "Input JSON must include: services, summary, tree, repo_code_context, config."
     )
 
     def _run(self, input_json: str) -> str:
+        """
+        Prepares context for the docker-compose template and invokes the LLM.
+        """
         data: Dict[str, Any] = json.loads(input_json)
-        services: List[Dict[str, Any]] = data["services"]
-        summary = data["summary"]
-        tree: List[str] = data["tree"]
-        repo_ctx = data.get("repo_code_context", "")
-        config = data["config"]
+        
+        # 1. Prepare the context dictionary
+        # The compose prompt is simpler and can infer details from the service list
+        context = {
+            "project_name": data.get("project_name", "multi-service-project"),
+            "summary": data.get("summary", "No summary provided."),
+            "tree": "\n".join(data.get("tree", [])),
+            # Pass the manifest/entrypoint content of the *first* service as a representative example
+            "manifest_content": data["services"][0].get("manifest_content", "Manifest not found.") if data.get("services") else "",
+            "entrypoint_content": data.get("repo_code_context", ""),
+            "other_relevant_snippets": "",
+            # Provide fresh tags for common services
+            "postgres_image_tag": _get_latest_docker_image_tag("postgres"),
+            "redis_image_tag": _get_latest_docker_image_tag("redis"),
+        }
 
-        svc_lines = []
-        for svc in services:
-            svc_lines.append(
-                f"- {svc['name']}: path={svc['path'] or '.'}, lang={svc.get('language')}, "
-                f"port={svc.get('port')}, entrypoint={svc.get('entrypoint')}, "
-                f"env={svc.get('env')}, depends_on={svc.get('depends_on')}"
-            )
-        services_block = "\n".join(svc_lines)
-
-        prompt = f"""
-Generate a docker-compose.yml for this project:
-- Project summary:
-{summary}
-
-- File tree:
-{chr(10).join(f"- {p}" for p in tree)}
-
-- Repository code snippets:
-{repo_ctx}
-- Services:
-{services_block}
-
-
-Each service should `build:` from its path, use its generated Dockerfile,
-map its port, set entrypoint/env, and declare any `depends_on`. 
-Output only the docker-compose.yml content.
-""".strip()
-
-        compose_yml = call_llm(
-            prompt,
-            base_url=config["ollama_base_url"],
-            model=config["models"]["infra_model"],
-            temperature=config.get("temperature", 0.0),
+        # 2. Invoke the LLM with the compose templates
+        compose_yml = _invoke_llm(
+            DOCKER_COMPOSE_SYSTEM_PROMPT,
+            DOCKER_COMPOSE_USER_PROMPT,
+            context,
+            data["config"]
         )
 
+        # 3. Format the output artifact
         artifact = {
             "path": "docker-compose.yml",
-            "content": compose_yml.strip()
+            "content": compose_yml
         }
         return json.dumps(artifact)
 

@@ -7,27 +7,9 @@ from typing import Any, Dict, List, Optional
 
 from langchain.tools import BaseTool
 from gitingest import ingest
+from ..utils import load_config
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_EXCLUDE_PATTERNS = {
-    # Python build and cache
-    "__pycache__/", "*.egg-info/", ".venv/", "env/", "build/", "dist/", "*.lock",
-    # Test, prompt, and data folders
-    "test/", "prompt/", "prompts/", "data/",
-    # VCS and system
-    ".git/",
-    # JS/TS/Node build artifacts and dependencies
-    "node_modules/", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "vite.config.*", "next.config.*", "webpack.config.*", "babel.config.*",
-    # Go and Rust build artifacts
-    "vendor/", "target/",
-    # License and meta files
-    "LICENSE", "license*",
-    # Python/Ruby/other language init/meta files
-    "__init__.py", "__main__.py", "__about__.py", "__version__.py",
-}
-
-
 
 class GitIngestTool(BaseTool):
     name: str = "git_ingest"
@@ -38,12 +20,14 @@ class GitIngestTool(BaseTool):
 
     def __init__(self, exclude_patterns: Optional[set[str]] = None):
         super().__init__()
-        self.exclude_patterns = exclude_patterns or DEFAULT_EXCLUDE_PATTERNS
+        # Always use exclude_patterns from config for central management
+        config = load_config()
+        self._exclude_patterns = set(config.get('exclude_patterns', []))
 
     def _run(self, source: str) -> str:
         summary, tree, content = ingest(
             source,
-            exclude_patterns=self.exclude_patterns
+            exclude_patterns=self._exclude_patterns
         )
         return json.dumps({
             "project_path": source,
