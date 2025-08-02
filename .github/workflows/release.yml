@@ -1,0 +1,55 @@
+name: Python Semantic Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Fetch all history and tags
+        run: git fetch --all --tags
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install uv and dev dependencies
+        run: |
+          pip install uv
+          uv run pip install python-semantic-release pytest build
+
+      - name: Test with Pytest
+        env:
+          PYTHONPATH: src
+        run: |
+          uv run pytest
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Debug Git state
+        run: |
+          echo "--- Git Status ---"
+          git status
+          echo "--- Git Log (oneline, decorate, tags) ---"
+          git log --oneline --decorate --tags
+          echo "--- Git Tags ---"
+          git tag -l
+
+      - name: Run semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          uv run semantic-release publish
