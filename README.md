@@ -85,40 +85,43 @@ ollama serve
 ### 2. Run the CLI
 
 ```sh
-python src/main.py --help
+uv run python -m src.main --help  
 ```
 
 #### Common Commands
 
 - **Embed a Project:**
   ```sh
-  python src/main.py embed /path/to/your/project
+  uv run python -m src.main embed /path/to/your/project
+  uv run python -m src.main embed ../PlotTwister
   ```
 
 - **Ask a Question:**
   ```sh
-  uv run python src/main.py ask "How does authentication work?" --project your_project_name
+  uv run python -m src.main ask "How does authentication work?" --project your_project_name
   uv run python -m src.main ask "what does the main.py do" --project "PlotTwister"
   ```
 
 - **List Embedded Projects:**
   ```sh
-  python src/main.py list
+  uv run python -m src.main list
   ```
 
 - **Generate Dockerfile:**
   ```sh
-  python src/main.py generate-docker --project your_project_name
+  uv run python -m src.main generate-docker --project your_project_name
   ```
-# generate full infra for a multi-service repo
-uv run python -m src.main generate-infra /path/to/repo --output infra
-
-# generate just the Dockerfile for a single service folder
-python -m yourpackage.main generate-service-docker /path/to/repo/services/users
-
+### generate full infra for a multi-service repo
+  ```sh
+  uv run python -m src.main generate-infra /path/to/repo --output infra
+  ```
+### generate just the Dockerfile for a single service folder
+  ```sh
+  uv run python -m src.main generate-docker /path/to/repo/service
+  ```
 - **Generate docker-compose.yml:**
   ```sh
-  python src/main.py generate-compose --project your_project_name
+  uv run python -m src.main generate-compose --project your_project_name
   ```
 
 ---
