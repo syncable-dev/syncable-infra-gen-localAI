@@ -1,6 +1,7 @@
 import os
+
 import chromadb
-from chromadb.config import Settings
+
 
 class ChromaManager:
     def __init__(self, chroma_db_dir: str):
@@ -14,7 +15,10 @@ class ChromaManager:
     def get_collection(self, project_name: str, project_dir: str = None):
         """Get or create a collection. If creating, set project_dir as metadata."""
         if project_dir is not None:
-            return self.client.get_or_create_collection(name=project_name, metadata={"project_dir": os.path.abspath(project_dir)})
+            return self.client.get_or_create_collection(
+                name=project_name,
+                metadata={"project_dir": os.path.abspath(project_dir)},
+            )
         else:
             return self.client.get_or_create_collection(name=project_name)
 
@@ -22,14 +26,21 @@ class ChromaManager:
         collection = self.get_collection(project_name)
         return getattr(collection, "metadata", {})
 
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Explore ChromaDB collections.")
-    parser.add_argument("--db_dir", type=str, required=True, help="Path to ChromaDB directory")
+    parser.add_argument(
+        "--db_dir", type=str, required=True, help="Path to ChromaDB directory"
+    )
     parser.add_argument("--list", action="store_true", help="List all collections")
-    parser.add_argument("--preview", type=str, help="Preview documents in a collection (by name)")
-    parser.add_argument("--limit", type=int, default=5, help="Limit of documents to preview")
+    parser.add_argument(
+        "--preview", type=str, help="Preview documents in a collection (by name)"
+    )
+    parser.add_argument(
+        "--limit", type=int, default=5, help="Limit of documents to preview"
+    )
     parser.add_argument("--delete", type=str, help="Delete a collection by name")
     args = parser.parse_args()
 
@@ -65,4 +76,3 @@ if __name__ == "__main__":
 
     else:
         print("No action specified. Use --list, --preview <name>, or --delete <name>.")
-

@@ -21,17 +21,21 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install python-semantic-release
-          pip install -r requirements.txt
+          pip install uv
+          uv pip install python-semantic-release pytest build
+
+      - name: Test with Pytest
+        run: |
+          uv run pytest
 
       - name: Configure Git
         run: |
-          git config --global user.name "semantic-release-bot"
-          git config --global user.email "semantic-release-bot@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run semantic-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          semantic-release publish
+          uv run semantic-release publish
