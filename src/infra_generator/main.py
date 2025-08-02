@@ -15,20 +15,10 @@ from .infra_agent import run_infra_pipeline
 def main():
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
     logger = logging.getLogger("infra-main")
-    # 1) Ensure Ollama is running
-    logger.info("Checking Ollama setup...")
-    OllamaSetup().setup()
-    logger.info("Ollama is ready.")
-    # 2) Core components
-    logger.info("Loading config and initializing core components...")
-    config = load_config()
-    chroma_manager = ChromaManager(config['chroma_db_dir'])
-    embedder = Embedder(config, chroma_manager)
-    retriever = Retriever(config, chroma_manager)
-    query_handler = QueryHandler(config, retriever)
-    logger.info("Core components initialized.")
+
     # 3) CLI
     parser = argparse.ArgumentParser(description="Local Codebase Assistant CLI")
+    parser.add_argument("--config", help="Path to a custom config.yaml file")
     subparsers = parser.add_subparsers(dest="command")
 
     # Embed
@@ -56,6 +46,19 @@ def main():
     parser_infra.add_argument("-o", "--output", default="infra", help="Output folder")
 
     args = parser.parse_args()
+
+    # 1) Ensure Ollama is running
+    logger.info("Checking Ollama setup...")
+    OllamaSetup().setup()
+    logger.info("Ollama is ready.")
+    # 2) Core components
+    logger.info("Loading config and initializing core components...")
+    config = load_config(args.config)
+    chroma_manager = ChromaManager(config['chroma_db_dir'])
+    embedder = Embedder(config, chroma_manager)
+    retriever = Retriever(config, chroma_manager)
+    query_handler = QueryHandler(config, retriever)
+    logger.info("Core components initialized.")
 
     if args.command == "embed":
         logger.info(f"Embedding project: {args.project_dir} (name={args.name})")

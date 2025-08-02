@@ -30,45 +30,21 @@
 - **C/C++ Build Tools**  
   Required for building [tree-sitter-languages](https://pypi.org/project/tree-sitter-languages/).
 
-- **Git** (optional, for cloning repositories)
-
 ### 2. Installation
 
-#### a. Clone the Repository
-
-```sh
-git clone https://github.com/yourusername/local-AI-infra-generation.git
-cd local-AI-infra-generation
-```
-
-#### b. Create a Virtual Environment
-
+Create and activate a virtual environment:
 ```sh
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-#### c. Install Dependencies
-
-This project uses [uv](https://github.com/astral-sh/uv) for fast dependency management, but you can use pip as well.
-
-**With uv:**
-```sh
-uv pip install -r requirements.txt
-uv pip install -e .
-```
-
-**Or with pip:**
-```sh
-pip install -r requirements.txt
-pip install -e .
-```
-
-Alternatively, install via [pyproject.toml](pyproject.toml):
+Install the package from this repository:
 
 ```sh
 pip install .
 ```
+
+This will install the `infra-gen` command-line tool and all necessary dependencies.
 
 ---
 
@@ -76,99 +52,94 @@ pip install .
 
 ### 1. Start Ollama
 
-Make sure the Ollama server is running:
+Make sure the Ollama server is running in the background:
 
 ```sh
-ollama serve
+ollama serve &
 ```
 
 ### 2. Run the CLI
 
+Once installed, you can use the `infra-gen` command.
+
 ```sh
-uv run python -m src.main --help  
+infra-gen --help
 ```
 
 #### Common Commands
 
 - **Embed a Project:**
   ```sh
-  uv run python -m src.main embed /path/to/your/project
-  uv run python -m src.main embed ../PlotTwister
+  infra-gen embed /path/to/your/project
   ```
 
 - **Ask a Question:**
   ```sh
-  uv run python -m src.main ask "How does authentication work?" --project your_project_name
-  uv run python -m src.main ask "what does the main.py do" --project "PlotTwister"
+  infra-gen ask "How does authentication work?" --project your_project_name
   ```
 
 - **List Embedded Projects:**
   ```sh
-  uv run python -m src.main list
+  infra-gen list
   ```
 
-- **Generate Dockerfile:**
+- **Generate Full Infrastructure (Dockerfile, Compose, etc.):**
   ```sh
-  uv run python -m src.main generate-docker --project your_project_name
+  infra-gen generate-infra /path/to/your/project --output ./infra
   ```
-### generate full infra for a multi-service repo
+
+- **Generate Only a Dockerfile:**
   ```sh
-  uv run python -m src.main generate-infra /path/to/repo --output infra
+  infra-gen generate-docker --project your_project_name
   ```
-### generate just the Dockerfile for a single service folder
+
+- **Generate Only a docker-compose.yml:**
   ```sh
-  uv run python -m src.main generate-docker /path/to/repo/service
-  ```
-- **Generate docker-compose.yml:**
-  ```sh
-  uv run python -m src.main generate-compose --project your_project_name
+  infra-gen generate-compose --project your_project_name
   ```
 
 ---
 
 ## Configuration
 
-Edit [`src/config.yaml`](src/config.yaml) to customize:
+The tool uses a `config.yaml` file for settings. The configuration is loaded in the following order of priority:
 
-- Model names and versions
-- Supported languages and file extensions
-- ChromaDB storage directory
-- Ollama server URL
+1.  **Via `--config` flag:** Provide a direct path to a `.yaml` file.
+    ```sh
+    infra-gen --config /path/to/my-config.yaml embed /path/to/project
+    ```
+2.  **User-level config:** Place a file at `~/.config/infra-generator/config.yaml`.
+3.  **Default package config:** If no other config is found, a default version bundled with the package is used.
 
----
-
-## Dependencies
-
-Key packages (see [pyproject.toml](pyproject.toml) for full list):
-
-- [chromadb](https://pypi.org/project/chromadb/)
-- [langchain](https://pypi.org/project/langchain/)
-- [langchain-community](https://pypi.org/project/langchain-community/)
-- [pyyaml](https://pypi.org/project/pyyaml/)
-- [requests](https://pypi.org/project/requests/)
-- [tqdm](https://pypi.org/project/tqdm/)
-- [tree-sitter-languages](https://pypi.org/project/tree-sitter-languages/)
-- [typing-extensions](https://pypi.org/project/typing-extensions/)
+You can customize model names, ChromaDB storage directories, Ollama URLs, and more in your custom config file.
 
 ---
 
 ## Development
 
-- All source code is in [`src/`](src/).
-- Prompt templates are in [`prompt/`](prompt/).
-- Data and ChromaDB indexes are stored in [`data/`](data/).
+If you want to contribute to the development of this tool, you can install it in editable mode.
+
+1.  Clone the repository:
+    ```sh
+    git clone https://github.com/yourusername/local-AI-infra-generation.git
+    cd local-AI-infra-generation
+    ```
+2.  Create and activate a virtual environment:
+    ```sh
+    python -m venv .venv
+    source .venv/bin/activate
+    ```
+3.  Install in editable mode:
+    ```sh
+    pip install -e .
+    ```
+This allows you to make changes to the source code and have them reflected immediately when you run the `infra-gen` command.
 
 ### Running Tests
 
 _TODO: Add unit tests and instructions for running them._
 
 ---
-
-check db from chromadb: 
-
-uv run python -m src.chroma_manager --db_dir data/chroma_index --list
-
-uv run python -m src.chroma_manager --db_dir data/chroma_index --preview PlotTwister
 
 ## Troubleshooting
 
@@ -194,25 +165,9 @@ uv run python -m src.chroma_manager --db_dir data/chroma_index --preview PlotTwi
 - [ ] Support for private model registries and custom LLMs.
 - [ ] Optimize embedding and retrieval for large codebases.
 - [ ] Add CI/CD pipeline for automated testing and deployment.
-- [ ] Generate terraforms artifacts.
 
 ---
 
 ## License
 
 This project is licensed under the [Apache 2.0 License](LICENSE).
-
----
-
-## Acknowledgements
-
-- [Ollama](https://ollama.com/)
-- [LangChain](https://www.langchain.com/)
-- [ChromaDB](https://www.trychroma.com/)
-- [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
-
----
-
-## Contact
-
-For questions or contributions, please open an issue or pull request on [GitHub](https://github.com/yourusername/local-AI-infra-generation).
