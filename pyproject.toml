@@ -69,4 +69,6 @@ upload_to_pypi = true
 upload_to_release = true
 dist_path = "dist/"
 commit_author = "github-actions[bot] <actions@github.com>"
-commit_parser = "angular"
+commit_parser = "conventional"
+github_token = "env:GITHUB_TOKEN"
+pypi_token = "env:PYPI_TOKEN"
