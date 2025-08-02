@@ -194,6 +194,7 @@ uv run python -m src.chroma_manager --db_dir data/chroma_index --preview PlotTwi
 - [ ] Support for private model registries and custom LLMs.
 - [ ] Optimize embedding and retrieval for large codebases.
 - [ ] Add CI/CD pipeline for automated testing and deployment.
+- [ ] Generate terraforms artifacts.
 
 ---
 
