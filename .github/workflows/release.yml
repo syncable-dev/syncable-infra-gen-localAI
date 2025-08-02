@@ -19,10 +19,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install uv and dev dependencies
         run: |
           pip install uv
-          uv pip install python-semantic-release pytest build
+          uv run pip install python-semantic-release pytest build
 
       - name: Test with Pytest
         run: |
