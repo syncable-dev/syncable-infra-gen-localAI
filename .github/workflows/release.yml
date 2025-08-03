@@ -47,6 +47,19 @@ jobs:
           echo "--- Git Tags ---"
           git tag -l
 
+
+      - name: Check for existing release tags
+        id: tag-check
+        run: echo "::set-output name=count::$(git tag -l 'v*' | wc -l)"
+
+      - name: Bootstrap first version tag
+        if: steps.tag-check.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv run semantic-release version
+          git push origin --tags    
+
       - name: Run semantic-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
