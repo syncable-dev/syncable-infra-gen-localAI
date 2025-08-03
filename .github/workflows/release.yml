@@ -69,7 +69,7 @@ jobs:
 
       - name: Publish package distributions to PyPI
         if: steps.publish.outputs.released == 'true'
-        uses: pypa/gh-action-pypi-publish@v1
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           # directory where your artifacts live
           packages-dir: dist
