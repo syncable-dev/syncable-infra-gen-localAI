@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.1.1 (2025-08-03)
+
+### Bug Fixes
+
+- Fix license inconsistancy
+  ([`50ecbd9`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/50ecbd9c127098dbce43d5955f9ecbf09d4eb5a9))
+
+
 ## v1.1.0 (2025-08-03)
 
 ### Bug Fixes
