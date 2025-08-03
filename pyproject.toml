@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "local-ai-infra-generation"
 # The version is managed by semantic-release
-version = "0.1.0"
+version = "1.0.2"
 authors = [
   { name="Your Name", email="you@example.com" },
 ]
@@ -35,8 +35,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/local-AI-infra-generation"
-"Bug Tracker" = "https://github.com/yourusername/local-AI-infra-generation/issues"
+"Homepage" = "https://github.com/LishuaiJing3/local-AI-infra-generation"
+"Bug Tracker" = "https://github.com/LishuaiJing3/local-AI-infra-generation/issues"
 
 [project.scripts]
 infra-gen = "infra_generator.main:main"
@@ -58,8 +58,18 @@ where = ["src"]
 
 [tool.semantic_release]
 version_source = "toml"
-version_toml = "pyproject.toml:project.version"
+version_toml = ["pyproject.toml:project.version"]
 branch = "main"
 changelog_file = "CHANGELOG.md"
-# Use uv to build the package
-build_command = "uv pip install build && python -m build"
+build_command = "pip install build && python -m build"
+repository_url = "https://github.com/LishuaiJing3/local-AI-infra-generation"
+tag_format = "v{version}"
+major_on_zero = false
+upload_to_pypi = true
+upload_to_release = true
+dist_path = "dist/"
+commit_author = "github-actions[bot] <actions@github.com>"
+commit_parser = "conventional"
+github_token = "env:GITHUB_TOKEN"
+pypi_token = "env:PYPI_TOKEN"
+

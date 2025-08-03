@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 models:
   embed_model: manutic/nomic-embed-code:7b-Q4_K_M
   qna_model: codestral:22b-v0.1-q2_K
@@ -9,10 +10,24 @@ supported_languages:
   - go
   - typescript
 extensions:
+=======
+ollama_base_url: http://localhost:11434
+
+models:
+  qna_model: codestral:22b-v0.1-q2_K
+  embedding_model: manutic/nomic-embed-code:7b-Q4_K_M
+
+chroma_db_dir: ./data/chroma_index
+
+# Supported languages and their file extensions
+# Used for filtering and for tree-sitter parsing
+supported_languages:
+>>>>>>> main
   python: .py
   javascript: .js
   typescript: .ts
   go: .go
+<<<<<<< HEAD
 chroma_db_dir: "./data/chroma_index"
 exclude_patterns:
   - "__pycache__/"
@@ -54,3 +69,38 @@ exclude_patterns:
   - "__init__.rb"
   - "__init__.js"
   - "__init__.ts"
+=======
+
+exclude_patterns:
+  - "**/.git/**"
+  - "**/__pycache__/**"
+  - "**/.venv/**"
+  - "**/node_modules/**"
+  - "**/.DS_Store"
+  - "**/*.log"
+  - "**/tmp/**"
+  - "**/temp/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/*.egg-info/**"
+  - "**/.pytest_cache/**"
+  - "**/.ruff_cache/**"
+  - "**/.mypy_cache/**"
+  - "**/.vscode/**"
+  - "**/.idea/**"
+  - "**/.env"
+  - "**/.env.*"
+  - "**/venv/**"
+  - "**/env/**"
+  - "**/test/**"
+  - "**/tests/**"
+  - "**/docs/**"
+  - "**/examples/**"
+  - "**/migrations/**"
+  - "**/__init__.py"
+  - "**/main.py"
+  - "**/app.py"
+  - "**/server.js"
+  - "**/index.js"
+  - "**/main.go"
+>>>>>>> main
