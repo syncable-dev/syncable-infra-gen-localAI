@@ -2,6 +2,35 @@
 
 <!-- version list -->
 
+## v1.0.1 (2025-08-03)
+
+### Bug Fixes
+
+- Add publish to pypi
+  ([`b8f8a8d`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/b8f8a8d7942bfab7b045f67ae26919d565c2b64f))
+
+- Change CI pipeline
+  ([`6b441a7`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/6b441a7710d9bec71a5c89bb9821deed95862941))
+
+- Inspect publish process
+  ([`6cd2457`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/6cd2457b1ebf04a9bef0effcb3c92253bf23c31f))
+
+- Publish syntax
+  ([`a78355b`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/a78355b9a339e0cee5a33281e200e368c54a55aa))
+
+- Release pipeline
+  ([`8dbbe95`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/8dbbe95259088a216f4ba69caaac398a43300696))
+
+- Remove uv from the build process
+  ([`be37a07`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/be37a076bfe4b71ac7530fbd8daa7db002c1ba4a))
+
+- Try publish with twine
+  ([`35fe96a`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/35fe96a401358b58d4a2eaea06a8fc21d9456a56))
+
+- Use reelase for pypi
+  ([`f97fe45`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/f97fe4574d6070ec3fb209c8c3c0aa2c92fe10b2))
+
+
 ## v1.0.0 (2025-08-03)
 
 - Initial Release
