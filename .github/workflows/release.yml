@@ -6,10 +6,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write       # needed by semantic-release to push tags & commits
-  id-token: write       # if you want to use OIDC-publishing later
-  packages: write       # not strictly needed here, but good practice for PyPI
-  pages: write          # optional, if you ever deploy pages
+  contents: write      # for pushing tags & changelog commits
+  id-token: write      # for OIDC (optional, for future Trusted Publishers)
+  packages: write      # for GitHub Packages (not strictly needed)
 
 jobs:
   release:
@@ -21,15 +20,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 2. Python 3.11 runtime
+      # 2. Set up Python 3.11
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      # 3. Install your tools & deps
+      # 3. Install your tooling & dev deps
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
           pip install uv python-semantic-release pytest build wheel setuptools
 
       # 4. Run tests
@@ -38,32 +37,40 @@ jobs:
           PYTHONPATH: src
         run: uv run pytest
 
-      # 5. Configure Git author for commits & tags
-      - name: Configure Git
+      # 5. Configure Git for commits & tags
+      - name: Configure Git user
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # 6. Cut release (version bump + changelog + tag + push)
+      # 6. Cut a release: bump, changelog, tag & push
       - name: Semantic Release Version
         id: release
         uses: python-semantic-release/python-semantic-release@v10.2.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
         env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}  
-      # → outputs:
-      #    - steps.release.outputs.released == 'true' if a new version was created
-      #    - steps.release.outputs.version == the new SemVer tag:contentReference[oaicite:0]{index=0}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      # → exposes:
+      #    steps.release.outputs.released == 'true'
+      #    steps.release.outputs.tag      == e.g. "v1.0.0"  :contentReference[oaicite:2]{index=2}
 
-      # 7. Build artifacts only if there *was* a release
-      - name: Build distributions
+      # 7. Upload your dist/ files to the GitHub Release assets
+      - name: Publish Release Assets
+        if: steps.release.outputs.released == 'true'
+        uses: python-semantic-release/publish-action@v10.2.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag }}
+
+      # 8. Build sdist + wheel
+      - name: Build Distributions
         if: steps.release.outputs.released == 'true'
         run: |
           pip install build
           python -m build --sdist --wheel --outdir dist
 
-      # 8. Publish to PyPI via the blessed PyPA Action
+      # 9. Publish to PyPI
       - name: Publish to PyPI
         if: steps.release.outputs.released == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -72,15 +79,5 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      # This will print clear logs like:
-      #   Uploading distributions to https://upload.pypi.org/legacy/
-      #   Uploading dist/…whl
-      #   Uploading dist/…tar.gz:contentReference[oaicite:1]{index=1}
-
-      # 9. (Optional) attach artifacts to the GitHub Release itself
-      - name: Upload to GitHub Release
-        if: steps.release.outputs.released == 'true'
-        uses: python-semantic-release/upload-to-gh-release@v10.2.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          assets: dist/*
+      # → logs will include:
+      #    “Uploading distributions to https://upload.pypi.org/legacy/” 
