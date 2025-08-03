@@ -6,6 +6,10 @@
 
 - Initial Release
 
+## v1.0.0 (2025-08-03)
+
+- Initial Release
+
 ## Unreleased
 
 ### Bug Fixes
