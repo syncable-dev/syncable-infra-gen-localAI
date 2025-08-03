@@ -50,7 +50,9 @@ jobs:
 
       - name: Check for existing release tags
         id: tag-check
-        run: echo "::set-output name=count::$(git tag -l 'v*' | wc -l)"
+        run: |
+          count=$(git tag -l 'v*' | wc -l)
+          echo "count=$count" >> $GITHUB_OUTPUT
 
       - name: Bootstrap first version tag
         if: steps.tag-check.outputs.count == '0'
@@ -67,12 +69,10 @@ jobs:
         run: |
           uv run semantic-release -vv publish
 
-      - name: Publish package distributions to PyPI
-        if: steps.publish.outputs.released == 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          # directory where your artifacts live
-          packages-dir: dist
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      - name: Publish to PyPI via Twine
+        # no `if:` guard, so it always runs
+        run: |
+          pip install twine
+          twine upload dist/* \
+            -u __token__ \
+            -p "${{ secrets.PYPI_TOKEN }}"
