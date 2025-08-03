@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.1.0 (2025-08-03)
+
+### Bug Fixes
+
+- Add author imfo
+  ([`589b8bd`](https://github.com/syncable-dev/syncable-infra-gen-localAI/commit/589b8bda7073d03a3f66270eb85177b2a8133015))
+
+
 ## v1.0.2 (2025-08-03)
 
 
