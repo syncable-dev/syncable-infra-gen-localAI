@@ -1,15 +1,17 @@
 # file: tools/git_tools.py
 
-import os
 import json
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
-from langchain.tools import BaseTool
 from gitingest import ingest
+from langchain.tools import BaseTool
+
 from ..utils import load_config
 
 logger = logging.getLogger(__name__)
+
 
 class GitIngestTool(BaseTool):
     name: str = "git_ingest"
@@ -22,19 +24,18 @@ class GitIngestTool(BaseTool):
         super().__init__()
         # Always use exclude_patterns from config for central management
         config = load_config()
-        self._exclude_patterns = set(config.get('exclude_patterns', []))
+        self._exclude_patterns = set(config.get("exclude_patterns", []))
 
     def _run(self, source: str) -> str:
-        summary, tree, content = ingest(
-            source,
-            exclude_patterns=self._exclude_patterns
+        summary, tree, content = ingest(source, exclude_patterns=self._exclude_patterns)
+        return json.dumps(
+            {
+                "project_path": source,
+                "summary": summary,
+                "tree": tree,
+                "content": content,
+            }
         )
-        return json.dumps({
-            "project_path": source,
-            "summary": summary,
-            "tree": tree,
-            "content": content
-        })
 
     async def _arun(self, source: str) -> str:
         return self._run(source)
@@ -55,11 +56,11 @@ class DetectServicesTool(BaseTool):
         # Map manifest → language
         known = {
             "requirements.txt": "python",
-            "pyproject.toml":  "python",
-            "poetry.lock":     "python",
-            "package.json":    "javascript",
-            "go.mod":          "go",
-            "Cargo.toml":      "rust",
+            "pyproject.toml": "python",
+            "poetry.lock": "python",
+            "package.json": "javascript",
+            "go.mod": "go",
+            "Cargo.toml": "rust",
         }
 
         for path in tree:
@@ -68,12 +69,14 @@ class DetectServicesTool(BaseTool):
                     # directory containing the manifest
                     dir_path = os.path.dirname(path)
                     print(dir_path)
-                    name = os.path.basename(dir_path) or os.path.basename(data["project_path"])
+                    name = os.path.basename(dir_path) or os.path.basename(
+                        data["project_path"]
+                    )
                     services[dir_path] = {
                         "name": name,
                         "path": dir_path,
                         "language": lang,
-                        "manifest": manifest
+                        "manifest": manifest,
                     }
                     break
 

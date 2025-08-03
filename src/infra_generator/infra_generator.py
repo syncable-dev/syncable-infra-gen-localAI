@@ -317,4 +317,8 @@ class InfraGenerator:
         ---
         Based on the user's request and the provided application context, generate the required IaC.
         """
+<<<<<<< HEAD
         return self._invoke_llm(generic_system_prompt, generic_user_template, context)
+=======
+        return self._invoke_llm(generic_system_prompt, generic_user_template, context)
+>>>>>>> main

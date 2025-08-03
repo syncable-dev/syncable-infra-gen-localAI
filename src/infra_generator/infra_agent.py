@@ -223,4 +223,8 @@ def run_infra_pipeline(source: str, output_folder: str) -> None:
     logger.info(
         "Infrastructure generation pipeline finished successfully. "
         f"Total time: {time.time() - t0:.1f}s"
+<<<<<<< HEAD
     )
+=======
+    )
+>>>>>>> main

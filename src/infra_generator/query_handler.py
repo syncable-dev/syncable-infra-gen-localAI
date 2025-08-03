@@ -1,5 +1,6 @@
 import requests
 
+
 class QueryHandler:
     def __init__(self, config, retriever):
         self.config = config
@@ -38,12 +39,11 @@ class QueryHandler:
         print(f"Sending prompt to Ollama: {prompt}")
         url = f"{self.config['ollama_base_url']}/api/generate"
         payload = {
-            "model": self.config['models']['qna_model'],
+            "model": self.config["models"]["qna_model"],
             "prompt": prompt,
             "stream": False,
         }
         resp = requests.post(url, json=payload)
         resp.raise_for_status()
         print(f"Received response from Ollama: {resp.json()['response']}")
-        return resp.json()['response']
-
+        return resp.json()["response"]

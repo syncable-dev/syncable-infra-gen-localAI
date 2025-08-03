@@ -1,3 +1,16 @@
+<<<<<<< HEAD
+models:
+  embed_model: manutic/nomic-embed-code:7b-Q4_K_M
+  qna_model: codestral:22b-v0.1-q2_K
+ollama_base_url: "http://localhost:11434"
+embedding_chunk_size: 1000  # characters
+supported_languages:
+  - python
+  - javascript
+  - go
+  - typescript
+extensions:
+=======
 ollama_base_url: http://localhost:11434
 
 models:
@@ -9,10 +22,54 @@ chroma_db_dir: ./data/chroma_index
 # Supported languages and their file extensions
 # Used for filtering and for tree-sitter parsing
 supported_languages:
+>>>>>>> main
   python: .py
   javascript: .js
   typescript: .ts
   go: .go
+<<<<<<< HEAD
+chroma_db_dir: "./data/chroma_index"
+exclude_patterns:
+  - "__pycache__/"
+  - "*.egg-info/"
+  - "test/"
+  - "prompt/"
+  - "data/"
+  - ".git/"
+  - ".venv/"
+  - "env/"
+  - "build/"
+  - "dist/"
+  - "*.lock"
+  - "node_modules/"
+  - "package-lock.json"
+  - "yarn.lock"
+  - "pnpm-lock.yaml"
+  - "vite.config.*"
+  - "next.config.*"
+  - "webpack.config.*"
+  - "babel.config.*"
+  - "vendor/"
+  - "target/"
+  - "LICENSE"
+  - "license*"
+  - "__init__.py"
+  - "__init__.pyc"
+  - "__init__.pyo"
+  - "__init__.pyw"
+  - "__init__.cpython-*"
+  - "__main__.py"
+  - "__main__.pyc"
+  - "__main__.pyo"
+  - "__main__.pyw"
+  - "__main__.cpython-*"
+  - "__about__.py"
+  - "__version__.py"
+  - "__meta__.py"
+  - "__init__.rb"
+  - "__init__.js"
+  - "__init__.ts"
+=======
 
 exclude_patterns:
   - "**/.git/**"
@@ -46,3 +103,4 @@ exclude_patterns:
   - "**/server.js"
   - "**/index.js"
   - "**/main.go"
+>>>>>>> main
