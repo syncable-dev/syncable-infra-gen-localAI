@@ -170,4 +170,4 @@ _TODO: Add unit tests and instructions for running them._
 
 ## License
 
-This project is licensed under the [Apache 2.0 License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
