@@ -66,3 +66,13 @@ jobs:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
           uv run semantic-release -vv publish
+
+      - name: Publish package distributions to PyPI
+        if: steps.publish.outputs.released == 'true'
+        uses: pypa/gh-action-pypi-publish@v1
+        with:
+          # directory where your artifacts live
+          packages-dir: dist
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
