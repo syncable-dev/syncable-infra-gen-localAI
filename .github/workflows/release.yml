@@ -2,77 +2,85 @@ name: Python Semantic Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write       # needed by semantic-release to push tags & commits
+  id-token: write       # if you want to use OIDC-publishing later
+  packages: write       # not strictly needed here, but good practice for PyPI
+  pages: write          # optional, if you ever deploy pages
 
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # 1. Checkout full history & tags
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Fetch all history and tags
-        run: git fetch --all --tags
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # 2. Python 3.11 runtime
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install uv and dev dependencies
+      # 3. Install your tools & deps
+      - name: Install dependencies
         run: |
-          pip install uv
-          uv run pip install python-semantic-release pytest build
+          python -m pip install --upgrade pip
+          pip install uv python-semantic-release pytest build wheel setuptools
 
-      - name: Test with Pytest
+      # 4. Run tests
+      - name: Run Pytest
         env:
           PYTHONPATH: src
-        run: |
-          uv run pytest
+        run: uv run pytest
 
+      # 5. Configure Git author for commits & tags
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Debug Git state
-        run: |
-          echo "--- Git Status ---"
-          git status
-          echo "--- Git Log (oneline, decorate, tags) ---"
-          git log --oneline --decorate --tags
-          echo "--- Git Tags ---"
-          git tag -l
-
-
-      - name: Check for existing release tags
-        id: tag-check
-        run: |
-          count=$(git tag -l 'v*' | wc -l)
-          echo "count=$count" >> $GITHUB_OUTPUT
-
-      - name: Bootstrap first version tag
-        if: steps.tag-check.outputs.count == '0'
+      # 6. Cut release (version bump + changelog + tag + push)
+      - name: Semantic Release Version
+        id: release
+        uses: python-semantic-release/python-semantic-release@v10.2.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          uv run semantic-release version
-          git push origin --tags    
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}  
+      # → outputs:
+      #    - steps.release.outputs.released == 'true' if a new version was created
+      #    - steps.release.outputs.version == the new SemVer tag:contentReference[oaicite:0]{index=0}
 
-      - name: Run semantic-release
+      # 7. Build artifacts only if there *was* a release
+      - name: Build distributions
+        if: steps.release.outputs.released == 'true'
+        run: |
+          pip install build
+          python -m build --sdist --wheel --outdir dist
+
+      # 8. Publish to PyPI via the blessed PyPA Action
+      - name: Publish to PyPI
+        if: steps.release.outputs.released == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          uv run semantic-release -vv publish
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      # This will print clear logs like:
+      #   Uploading distributions to https://upload.pypi.org/legacy/
+      #   Uploading dist/…whl
+      #   Uploading dist/…tar.gz:contentReference[oaicite:1]{index=1}
 
-      - name: Publish to PyPI via Twine
-        # no `if:` guard, so it always runs
-        run: |
-          pip install twine
-          twine upload dist/* \
-            -u __token__ \
-            -p "${{ secrets.PYPI_TOKEN }}"
+      # 9. (Optional) attach artifacts to the GitHub Release itself
+      - name: Upload to GitHub Release
+        if: steps.release.outputs.released == 'true'
+        uses: python-semantic-release/upload-to-gh-release@v10.2.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          assets: dist/*
